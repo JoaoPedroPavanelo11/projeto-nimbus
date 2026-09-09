@@ -6,7 +6,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 
 @Injectable()
-export class TicketService {
+export class TicketsService {
 
   constructor(
     @InjectRepository(Ticket)

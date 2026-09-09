@@ -1,0 +1,93 @@
+{
+  "info": {
+    "name": "Nimbus - Tickets",
+    "description": "CRUD de tickets (NestJS + TypeORM). O POST 'Criar ticket' salva o id em {{ticketId}} automaticamente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "ticketId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Criar ticket (POST)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('ticketId', body.id);",
+              "console.log('ticketId salvo:', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Impressora sem toner\",\n  \"description\": \"A impressora do 2 andar parou de funcionar\",\n  \"priority\": \"high\",\n  \"category\": \"hardware\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Listar tickets (GET)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] }
+      }
+    },
+    {
+      "name": "Buscar 1 ticket (GET :id)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["tickets", "{{ticketId}}"] }
+      }
+    },
+    {
+      "name": "Atualizar ticket (PATCH :id)",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["tickets", "{{ticketId}}"] },
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"in_progress\"\n}" }
+      }
+    },
+    {
+      "name": "Deletar ticket (DELETE :id)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["tickets", "{{ticketId}}"] }
+      }
+    },
+    {
+      "name": "Erro 404 - id inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tickets/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["tickets", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    },
+    {
+      "name": "Erro 400 - payload invalido",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] },
+        "body": { "mode": "raw", "raw": "{\n  \"description\": \"faltou o title\"\n}" }
+      }
+    }
+  ]
+}
