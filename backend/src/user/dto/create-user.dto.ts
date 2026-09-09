@@ -10,7 +10,7 @@ export class CreateUserDto {
     nome: string;
 
     @IsEmail()
-    @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase().trim : value) // Logica para transformar todo email em letra minuscula
+    @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase().trim() : value) // Logica para transformar todo email em letra minuscula
     email: string;
     
     @IsString()
