@@ -1,26 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Ticket } from './entities/ticket.entity.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 
 @Injectable()
-export class TicketsService {
-  create(createTicketDto: CreateTicketDto) {
-    return 'This action adds a new ticket';
+export class TicketService {
+
+  constructor(
+    @InjectRepository(Ticket)
+    private readonly ticketsRepository: Repository<Ticket>
+  ){}
+
+  create(dto: CreateTicketDto){ // ele grava um ticket novo (responsavel por salvar os ticket)
+    const ticket = this.ticketsRepository.create(dto);
+    return this.ticketsRepository.save(ticket);
   }
 
-  findAll() {
-    return `This action returns all tickets`;
+  findAll(){ // Metodo para fazer uma consulta (nesse caso ele consulta todos)
+    return this.ticketsRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} ticket`;
+  async findOne(id: string){ // Procura um ticket pelo ID esse metodo é usado para apagar e fazer update em outros metodos
+    const ticket = await this.ticketsRepository.findOneBy({ id });
+    if(!ticket){
+      throw new NotFoundException(`Ticket ${id} não encontrado`)
+    }
+    return ticket;
   }
 
-  update(id: number, updateTicketDto: UpdateTicketDto) {
-    return `This action updates a #${id} ticket`;
+  async remove(id: string){ // Metodo para apagar um ticket basedo no ID
+    const ticket = await this.findOne(id);
+    return this.ticketsRepository.remove(ticket);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} ticket`;
+  async update(id: string, dto: UpdateTicketDto){
+    const ticket = await this.ticketsRepository.preload({ id, ...dto })
+    if(!ticket){
+      throw new NotFoundException(`Ticket ${id} nao encontrado!`);
+    }
+    return this.ticketsRepository.save(ticket)
   }
 }
