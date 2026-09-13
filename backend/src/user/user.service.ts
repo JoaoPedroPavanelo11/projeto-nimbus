@@ -31,7 +31,8 @@ export class UserService {
 
     // Salvo o usuario 
     const saved = await this.userRepository.save(user);
-    //Metodo para proteger a senha
+    
+    //Retorna o objeto sem a senha
     const { senha: _senha, ...rest } = saved
     return rest;
   }
