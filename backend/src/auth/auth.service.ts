@@ -1,12 +1,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto.js';
 import { UserService } from '../user/user.service.js';
+import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
 
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async login(dto: LoginDto) {
     const usuario = await this.userService.findByEmail(dto.email); // Reutilizei o metodo que eu fiz na user service para ver email
@@ -19,6 +23,8 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais invalidas!')
     }
 
-    return { mensagem: 'Login concluido!' } // So da 201 caso o email for valido e a senha for valida
+    const payload = { sub : usuario.id, email: usuario.email, role: usuario.role }; // São os dados que irão ficar guardados dentro do token
+
+    return { access_token: this.jwtService.sign(payload) };
   }
 }
