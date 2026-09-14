@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { userRole } from '../enums/user.role.enums.js';
+import { Ticket } from '../../tickets/entities/ticket.entity.js';
 
 @Entity('user')
 export class User {
@@ -29,4 +30,10 @@ export class User {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @OneToMany(() => Ticket, (ticket) => ticket.createdBy)
+    createdTickets: Ticket[];
+
+    @OneToMany(() => Ticket, (ticket) => ticket.assignedTo)
+    assignedTickets: Ticket[];
 }

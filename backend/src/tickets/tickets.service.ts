@@ -13,8 +13,11 @@ export class TicketsService {
     private readonly ticketsRepository: Repository<Ticket>
   ){}
 
-  create(dto: CreateTicketDto){ // ele grava um ticket novo (responsavel por salvar os ticket)
-    const ticket = this.ticketsRepository.create(dto);
+  create(dto: CreateTicketDto, createdById: string){ // ele grava um ticket novo (responsavel por salvar os ticket)
+    const ticket = this.ticketsRepository.create({
+      ...dto,
+      createdBy: { id: createdById },
+    });
     return this.ticketsRepository.save(ticket);
   }
 

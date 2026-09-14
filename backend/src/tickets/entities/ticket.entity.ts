@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, } from 'typeorm';
 import { TicketPriority } from '../enums/ticket-priority.enums.js';
 import { TicketStatus } from '../enums/ticket-status.enums.js';
+import { User } from '../../user/entities/user.entity.js';
 
 @Entity('tickets')
 export class Ticket {
@@ -35,4 +36,13 @@ export class Ticket {
 
     @UpdateDateColumn()
     updatedAt: Date;
-};
+
+
+    @ManyToOne(() => User, (user) => user.createdTickets, { onDelete: 'CASCADE', nullable: false }) 
+    @JoinColumn({ name: 'createdById' })
+    createdBy: User;
+
+    @ManyToOne(() => User, (user) => user.assignedTickets, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'assignedToId' })
+    assignedTo: User | null;
+}
