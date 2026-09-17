@@ -17,8 +17,8 @@ export class TicketsController {
   }
 
   @Get()
-  findAll() {
-    return this.ticketsService.findAll();
+  findAll(@CurrentUser() user: AuthenticatedUser) {
+    return this.ticketsService.findAll(user);
   }
 
   @Get(':id')

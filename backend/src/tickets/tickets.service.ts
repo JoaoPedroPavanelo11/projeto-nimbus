@@ -25,8 +25,21 @@ export class TicketsService {
     return this.ticketsRepository.save(ticket);
   }
 
-  findAll(){ // Metodo para fazer uma consulta (nesse caso ele consulta todos)
-    return this.ticketsRepository.find();
+  // Member só vê os proprios tickets; admin/officer veem todos
+  findAll(user: AuthenticatedUser){
+    const isStaff = STAFF_ROLES.includes(user.role);
+
+    let where;
+    if (isStaff) {
+      where = {};
+    } else {
+      where = { createdBy: { id: user.id } };
+    }
+
+    return this.ticketsRepository.find({
+      where,
+      relations: { createdBy: true },
+    });
   }
 
   async findOne(id: string){ // Procura um ticket pelo ID esse metodo é usado para apagar e fazer update em outros metodos
@@ -59,7 +72,20 @@ export class TicketsService {
     const ticket = await this.findOne(id);
     this.assertCanManage(ticket, user);
 
-    const updated = await this.ticketsRepository.preload({ id, ...dto })
+    const { status, assignedToId, ...rest } = dto;
+    const isStaff = STAFF_ROLES.includes(user.role);
+
+    // Status e responsavel so podem ser alterados por admin/officer
+    if ((status !== undefined || assignedToId !== undefined) && !isStaff) {
+      throw new ForbiddenException('Somente admin ou officer podem alterar status ou responsavel do ticket');
+    }
+
+    const updated = await this.ticketsRepository.preload({
+      id,
+      ...rest,
+      ...(status !== undefined && { status }),
+      ...(assignedToId !== undefined && { assignedTo: assignedToId ? { id: assignedToId } : null }),
+    });
     if(!updated){
       throw new NotFoundException(`Ticket ${id} nao encontrado!`);
     }
