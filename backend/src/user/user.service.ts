@@ -37,12 +37,13 @@ export class UserService {
     return rest;
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string): Promise<Omit<User, 'senha'>> {
     const usuario = await this.userRepository.findOneBy({ id });
     if (!usuario) {
       throw new NotFoundException(`Usuario ${id} nao encontrado!`)
     }
-    return usuario;
+    const { senha: _senha, ...rest } = usuario;
+    return rest;
   }
 
   async findByEmail(email: string): Promise<User | null> {
