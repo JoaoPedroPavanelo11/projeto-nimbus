@@ -92,54 +92,54 @@ Officers e admins formam a **equipe de atendimento**.
 
 ### 1. Clonar o repositório
 ```bash
-git clone https://github.com/seu-usuario/projeto-nimbus.git
-cd projeto-nimbus/backend
+git clone https://github.com/JoaoPedroPavanelo11/projeto-nimbus.git
+cd projeto-nimbus
 ```
 
-### 2. Instalar as dependências
+### 2. Subir o banco de dados
 ```bash
+docker compose up -d
+```
+
+Isso sobe um PostgreSQL na porta `5432` com o banco `nimbus` já criado. Se preferir usar um
+PostgreSQL instalado localmente, crie o banco com `CREATE DATABASE nimbus;` e ajuste o `.env`.
+
+### 3. Instalar as dependências
+```bash
+cd backend
 npm install
 ```
 
-### 3. Configurar o .env
-Crie um arquivo `.env` dentro da pasta `backend` com as variáveis abaixo:
+### 4. Configurar o .env
+Copie o arquivo de exemplo e ajuste os valores:
 
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=sua_senha
-DB_NAME=nimbus
-
-JWT_SECRET=troque_por_uma_chave_secreta
-PORT=3000
+```bash
+cp .env.example .env
 ```
 
-A `PORT` é opcional (o padrão é 3000). Sem o `JWT_SECRET` a aplicação não inicia.
-
-### 4. Criar o banco de dados
-As tabelas são criadas automaticamente pelo TypeORM, mas o banco precisa existir antes:
-
-```sql
-CREATE DATABASE nimbus;
-```
+| Variável | Descrição |
+|---|---|
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Conexão com o PostgreSQL (o padrão bate com o docker-compose) |
+| `JWT_SECRET` | Chave usada para assinar os tokens. Sem ela a aplicação não inicia |
+| `PORT` | Porta da API (opcional, padrão 3000) |
+| `ADMIN_NOME`, `ADMIN_EMAIL`, `ADMIN_SENHA` | Dados do primeiro admin, usados pelo seed |
 
 ### 5. Rodar a aplicação
 ```bash
 npm run start:dev
 ```
 
-A API fica disponível em `http://localhost:3000`.
+A API fica disponível em `http://localhost:3000`. As tabelas são criadas automaticamente pelo TypeORM.
 
 ### 6. Criar o primeiro admin
-Todo cadastro entra como member, então o primeiro admin precisa ser definido direto no banco.
-Cadastre um usuário pela rota `POST /user` e depois rode:
+Todo cadastro entra como member, então o primeiro admin é criado pelo seed, usando as
+variáveis `ADMIN_*` do `.env`:
 
-```sql
-UPDATE "user" SET role = 'admin' WHERE email = 'seu@email.com';
+```bash
+npm run seed
 ```
 
-O nome da tabela fica entre aspas porque `user` é uma palavra reservada no PostgreSQL.
+Se o email já existir, o usuário é promovido a admin. Rodar o seed de novo não cria duplicatas.
 
 ## Rotas da API
 
@@ -236,11 +236,11 @@ A coleção do Postman em `backend/nimbus.postman_collection.json` também tem e
 
 ## Roadmap
 - [ ] Testes unitários e e2e
-- [ ] Seed para criar o primeiro admin
+- [x] Seed para criar o primeiro admin
 - [ ] Documentação com Swagger
-- [ ] docker-compose com o PostgreSQL
+- [x] docker-compose com o PostgreSQL
 - [ ] Migrations no lugar do `synchronize`
-- [ ] Arquivo `.env.example`
+- [x] Arquivo `.env.example`
 - [ ] Paginação e filtros na listagem de chamados
 - [ ] Comentários nos chamados
 - [ ] Histórico de alterações do chamado

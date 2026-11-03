@@ -6,3 +6,4 @@ build/
 .env.*
 *.log
 coverage/
+!.env.example
