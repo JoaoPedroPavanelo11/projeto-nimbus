@@ -28,7 +28,7 @@ export class Ticket {
     })
     status: TicketStatus;
 
-    @Column({ length: 50, nullable: true})
+    @Column({ length: 50, nullable: true, type: 'varchar'})
     category: string | null;
 
     @CreateDateColumn()
