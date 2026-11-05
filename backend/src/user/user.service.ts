@@ -115,4 +115,15 @@ export class UserService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOneBy({ email });
   }
+
+  // Usado SÓ no login: busca o usuario COM a senha.
+  // A senha normalmente fica escondida por causa do select: false na entidade,
+  // entao aqui eu peço ela de proposito para o bcrypt conseguir comparar.
+  async findByEmailComSenha(email: string): Promise<User | null> { // Retorna o usuario ou null se o email nao existir
+    return this.userRepository.findOne({ // findOne (e nao findOneBy) porque preciso da opcao select
+      where: { email }, // Filtro: email igual ao recebido ({ email } = { email: email })
+      select: { id: true, email: true, role: true, senha: true }, // So as colunas que o login usa: senha p/ comparar, id/email/role p/ o token
+    });
+  }
+
 }

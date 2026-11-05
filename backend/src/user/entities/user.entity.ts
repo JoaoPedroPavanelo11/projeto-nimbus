@@ -14,7 +14,7 @@ export class User {
     @Column({ unique: true})
     email: string;
 
-    @Column()
+    @Column({ select: false }) // A senha é guardada no banco, mas nunca exposta fazendo com que a senha venha undefined.
     senha: string;
 
     @Column({
