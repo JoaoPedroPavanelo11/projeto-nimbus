@@ -53,12 +53,19 @@ export class TicketsService {
     return ticket;
   }
 
-  // Só quem criou o ticket ou um admin/officer pode alterar ou apagar
+  // Metodo para que cada usuario consiga ver o seu proprio ticket
+  async findOneForUser(id: string, user: AuthenticatedUser){
+    const ticket = await this.findOne(id);
+    this.assertCanManage(ticket, user);
+    return ticket;
+  }
+
+  // So o criador do ticket ou a equipe (admin/officer) podem ver, alterar ou apagar
   private assertCanManage(ticket: Ticket, user: AuthenticatedUser){
     const isOwner = ticket.createdBy.id === user.id;
     const isStaff = STAFF_ROLES.includes(user.role);
     if(!isOwner && !isStaff){
-      throw new ForbiddenException('Voce nao tem permissao para alterar este ticket');
+      throw new ForbiddenException('Voce nao tem permissao para acessar este ticket');
     }
   }
 

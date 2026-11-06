@@ -22,8 +22,8 @@ export class TicketsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ticketsService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.ticketsService.findOneForUser(id, user);
   }
 
   @Patch(':id')

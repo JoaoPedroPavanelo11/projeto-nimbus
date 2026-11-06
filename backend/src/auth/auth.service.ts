@@ -13,7 +13,7 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto) {
-    const usuario = await this.userService.findByEmailComSenha(dto.email); // Reutilizei o metodo que eu fiz na user service para ver email
+    const usuario = await this.userService.findByEmailComSenha(dto.email); 
     if (!usuario) {
       throw new UnauthorizedException('Credenciais invalidas!');
     }
