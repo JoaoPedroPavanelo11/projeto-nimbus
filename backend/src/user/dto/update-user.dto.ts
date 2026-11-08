@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
 import { CreateUserDto } from './create-user.dto.js';
 import { userRole } from '../enums/user.role.enums.js';

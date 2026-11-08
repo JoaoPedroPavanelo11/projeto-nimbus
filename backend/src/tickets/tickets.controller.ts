@@ -5,7 +5,10 @@ import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../common/types/authenticated-user.interface.js';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Chamados') // serve para organizar a pagina do Swagger em grupos
+@ApiBearerAuth() // Tem isso aqui porque precisa de um token
 @Controller('tickets')
 @UseGuards(AuthGuard('jwt'))
 export class TicketsController {

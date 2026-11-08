@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { CreateTicketDto } from './create-ticket.dto.js';
 import { TicketStatus } from '../enums/ticket-status.enums.js';
