@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket } from './entities/ticket.entity.js';
@@ -6,6 +6,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { userRole } from '../user/enums/user.role.enums.js';
 import type { AuthenticatedUser } from '../common/types/authenticated-user.interface.js';
+import { TicketHistory } from './entities/ticket-history.entity.js';
 
 const STAFF_ROLES = [userRole.ADMIN, userRole.OFFICER];
 
@@ -14,7 +15,10 @@ export class TicketsService {
 
   constructor(
     @InjectRepository(Ticket)
-    private readonly ticketsRepository: Repository<Ticket>
+    private readonly ticketsRepository: Repository<Ticket>,
+
+    @InjectRepository(TicketHistory)
+    private readonly historyRepository: Repository<TicketHistory>,
   ){}
 
   create(dto: CreateTicketDto, createdById: string){ // ele grava um ticket novo (responsavel por salvar os ticket)
@@ -45,7 +49,7 @@ export class TicketsService {
   async findOne(id: string){ // Procura um ticket pelo ID esse metodo é usado para apagar e fazer update em outros metodos
     const ticket = await this.ticketsRepository.findOne({
       where: { id },
-      relations: { createdBy: true },
+      relations: { createdBy: true, assignedTo: true },
     });
     if(!ticket){
       throw new NotFoundException(`Ticket ${id} não encontrado`)
@@ -96,6 +100,37 @@ export class TicketsService {
     if(!updated){
       throw new NotFoundException(`Ticket ${id} nao encontrado!`);
     }
-    return this.ticketsRepository.save(updated)
+
+    const mudanca: { field: string, oldValue: string | null; newValue: string | null } [] = [];
+
+    const camposSimples = [ 'title', 'description','priority','category','status'] as const;
+    for(const campo of camposSimples){
+      const novo = dto[campo];
+      const atual = ticket[campo];
+      if(novo !== undefined && novo !== atual){
+        mudanca.push({ field: campo, oldValue: atual ?? null, newValue:novo ?? null })
+      }
+    }
+
+    if(assignedToId !== undefined){
+      const atual = ticket.assignedTo?.id  ?? null;
+      if(assignedToId !== atual){ 
+        mudanca.push({ field: 'assignedTo', oldValue: atual, newValue: assignedToId })
+      }
+    }
+
+    const salvo = await this.ticketsRepository.save(updated);
+
+    if(mudanca.length > 0){
+      const registro = mudanca.map((m) => 
+      this.historyRepository.create({
+        ...m,
+        ticket: { id },
+        changedBy: { id: user.id },
+      }))
+
+      await this.historyRepository.save(registro)
+    }
+    return salvo;
   }
 }
