@@ -7,6 +7,8 @@ import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { userRole } from '../user/enums/user.role.enums.js';
 import type { AuthenticatedUser } from '../common/types/authenticated-user.interface.js';
 import { TicketHistory } from './entities/ticket-history.entity.js';
+import { TicketComment } from './entities/ticket-comment.entity.js';
+import { CreateCommentDto } from './dto/create-comment.dto.js';
 
 const STAFF_ROLES = [userRole.ADMIN, userRole.OFFICER];
 
@@ -19,6 +21,10 @@ export class TicketsService {
 
     @InjectRepository(TicketHistory)
     private readonly historyRepository: Repository<TicketHistory>,
+
+    @InjectRepository(TicketComment)
+    private readonly commentRepository: Repository<TicketComment>,
+
   ){}
 
   create(dto: CreateTicketDto, createdById: string){ // ele grava um ticket novo (responsavel por salvar os ticket)
@@ -132,5 +138,29 @@ export class TicketsService {
       await this.historyRepository.save(registro)
     }
     return salvo;
+  }
+
+  // Metodo que adiciona um comentario dentro do ticket
+  async addComment(id:string, dto: CreateCommentDto, user: AuthenticatedUser){
+      await this.findOneForUser(id, user); // Reaproveitei o metodo para checar permissão
+
+      const comentario = this.commentRepository.create({
+        content: dto.content,
+        ticket : { id },
+        author: { id: user.id },
+      });
+
+      return this.commentRepository.save(comentario)
+  }
+
+  // Lista todos os comentarios do ticket (em ordem de tempo)
+  async findComment(id: string, user: AuthenticatedUser ){
+    await this.findOneForUser(id, user);
+
+    return this.commentRepository.find({
+      where : { ticket: { id } },
+      relations : { author: true },
+      order: { createdAt: 'ASC' },
+    });
   }
 }

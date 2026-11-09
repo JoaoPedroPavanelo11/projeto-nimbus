@@ -6,6 +6,7 @@ import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../common/types/authenticated-user.interface.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CreateCommentDto } from './dto/create-comment.dto.js';
 
 @ApiTags('Chamados') // serve para organizar a pagina do Swagger em grupos
 @ApiBearerAuth() // Tem isso aqui porque precisa de um token
@@ -37,5 +38,19 @@ export class TicketsController {
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.ticketsService.remove(id, user);
+  }
+
+  @Post(':id/comments')
+  addComent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateCommentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.ticketsService.addComment(id, dto, user);
+  }
+
+  @Get(':id/comments')
+  findComments(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user:AuthenticatedUser){
+    return this.ticketsService.findComment(id, user);
   }
 }
