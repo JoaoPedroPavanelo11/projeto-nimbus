@@ -26,11 +26,17 @@ Todo o acesso é controlado por autenticação JWT e por cargos (**member**, **o
 - Atribuição de um responsável para cada chamado
 - Cada usuário visualiza apenas os seus próprios chamados
 - A equipe de atendimento visualiza todos os chamados
+- Comentários nos chamados, para o solicitante e a equipe conversarem
+- Registro automático das alterações de cada chamado (campo alterado, valor anterior, novo valor, autor e data)
 
 ### Segurança
-- Senhas armazenadas como hash (bcrypt) e nunca retornadas pela API
+- Senhas armazenadas como hash (bcrypt) e nunca retornadas pela API, nem dentro de outros recursos
 - Validação de todos os dados recebidos, rejeitando campos inesperados
+- Ids validados como UUID antes de chegar ao banco (id inválido retorna `400`)
 - Limite de 60 requisições por minuto (rate limiting)
+
+### Documentação
+- Documentação interativa com Swagger, onde é possível testar as rotas pelo navegador
 
 ## Cargos e permissões
 
@@ -50,6 +56,8 @@ Officers e admins formam a **equipe de atendimento**.
 | Editar e excluir os próprios chamados | ✅ | ✅ | ✅ |
 | Editar e excluir qualquer chamado | ❌ | ✅ | ✅ |
 | Alterar status e responsável do chamado | ❌ | ✅ | ✅ |
+| Comentar e ler comentários dos próprios chamados | ✅ | ✅ | ✅ |
+| Comentar e ler comentários de qualquer chamado | ❌ | ✅ | ✅ |
 | Consultar e editar o próprio perfil | ✅ | ✅ | ✅ |
 | Listar e visualizar todos os usuários | ❌ | ✅ | ✅ |
 | Editar outros usuários | ❌ | ❌ | ✅ |
@@ -80,7 +88,11 @@ Officers e admins formam a **equipe de atendimento**.
 - **[oxlint](https://oxc.rs)**: linter
 - **[Prettier](https://prettier.io)**: formatação
 
+### Documentação
+- **[Swagger](https://docs.nestjs.com/openapi/introduction)** (`@nestjs/swagger`): documentação interativa gerada a partir dos controllers e DTOs
+
 ### Ferramentas
+- **[Docker](https://www.docker.com)**: PostgreSQL via docker-compose
 - **[Postman](https://www.postman.com)**: coleção de requisições em `backend/nimbus.postman_collection.json`
 
 ## Como rodar o projeto
@@ -88,7 +100,7 @@ Officers e admins formam a **equipe de atendimento**.
 ### Pré-requisitos
 - Node.js 20 ou superior
 - npm
-- PostgreSQL
+- Docker (ou um PostgreSQL instalado localmente)
 
 ### 1. Clonar o repositório
 ```bash
@@ -101,8 +113,11 @@ cd projeto-nimbus
 docker compose up -d
 ```
 
-Isso sobe um PostgreSQL na porta `5432` com o banco `nimbus` já criado. Se preferir usar um
-PostgreSQL instalado localmente, crie o banco com `CREATE DATABASE nimbus;` e ajuste o `.env`.
+Isso sobe um PostgreSQL na porta `5433` com o banco `nimbus` já criado. A porta é `5433`
+(e não a padrão `5432`) para não conflitar com um PostgreSQL que já esteja instalado na máquina.
+
+Se preferir usar um PostgreSQL instalado localmente, crie o banco com `CREATE DATABASE nimbus;`
+e ajuste o `DB_PORT` no `.env`.
 
 ### 3. Instalar as dependências
 ```bash
@@ -131,6 +146,10 @@ npm run start:dev
 
 A API fica disponível em `http://localhost:3000`. As tabelas são criadas automaticamente pelo TypeORM.
 
+A documentação interativa (Swagger) fica em **`http://localhost:3000/docs`**. Para testar as
+rotas protegidas por lá, faça o login em `POST /auth/login`, copie o `access_token` e cole no
+botão **Authorize**.
+
 ### 6. Criar o primeiro admin
 Todo cadastro entra como member, então o primeiro admin é criado pelo seed, usando as
 variáveis `ADMIN_*` do `.env`:
@@ -139,7 +158,7 @@ variáveis `ADMIN_*` do `.env`:
 npm run seed
 ```
 
-Se o email já existir, o usuário é promovido a admin. Rodar o seed de novo não cria duplicatas.
+Se já existir um usuário com esse email, o seed não faz nada. Rodar de novo não cria duplicatas.
 
 ## Rotas da API
 
@@ -172,6 +191,8 @@ Authorization: Bearer <token>
 | GET | `/tickets/:id` | Dono do chamado, Officer, Admin | Busca um chamado pelo id |
 | PATCH | `/tickets/:id` | Dono do chamado, Officer, Admin | Atualiza um chamado |
 | DELETE | `/tickets/:id` | Dono do chamado, Officer, Admin | Exclui um chamado |
+| POST | `/tickets/:id/comments` | Dono do chamado, Officer, Admin | Adiciona um comentário no chamado |
+| GET | `/tickets/:id/comments` | Dono do chamado, Officer, Admin | Lista os comentários do chamado, do mais antigo para o mais novo |
 
 ### Valores aceitos
 - `priority`: `low`, `medium` (padrão) e `high`
@@ -232,18 +253,29 @@ Os campos `priority` e `category` são opcionais.
 
 Para remover o responsável, envie `"assignedToId": null`.
 
+### Comentar em um chamado
+`POST /tickets/:id/comments`
+```json
+{
+  "content": "Já verificou se o cabo de energia está conectado?"
+}
+```
+
+O texto pode ter até 2000 caracteres. O autor do comentário é sempre o usuário do token, e não
+pode ser informado no corpo da requisição.
+
 A coleção do Postman em `backend/nimbus.postman_collection.json` também tem exemplos das rotas de chamados.
 
 ## Roadmap
 - [ ] Testes unitários e e2e
 - [x] Seed para criar o primeiro admin
-- [ ] Documentação com Swagger
+- [x] Documentação com Swagger
 - [x] docker-compose com o PostgreSQL
 - [ ] Migrations no lugar do `synchronize`
 - [x] Arquivo `.env.example`
 - [ ] Paginação e filtros na listagem de chamados
-- [ ] Comentários nos chamados
-- [ ] Histórico de alterações do chamado
+- [x] Comentários nos chamados
+- [ ] Histórico de alterações do chamado (alterações já são gravadas; falta a rota de consulta)
 - [ ] Refresh token
 - [ ] Notificações por email
 - [ ] Frontend
